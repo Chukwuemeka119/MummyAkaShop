@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mummy Aka Shop — Everyday Essentials, Delivered Honestly</title>
+
+<!-- ============================= SEO ============================= -->
+<meta name="description" content="Mummy Aka Shop is Abuja's trusted neighbourhood store for provisions, beverages, home goods, personal care and more — with real-time stock and same-day delivery.">
+<meta name="keywords" content="Mummy Aka Shop, Abuja groceries, online provisions store Nigeria, same day delivery Abuja, buy groceries online Nigeria">
+<meta name="author" content="Mummy Aka Shop">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://www.mummyakashop.com/">
+
+<!-- Open Graph / social sharing -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mummy Aka Shop">
+<meta property="og:title" content="Mummy Aka Shop — Everyday Essentials, Delivered Honestly">
+<meta property="og:description" content="Shop provisions, beverages, home goods and more with live stock and same-day Abuja delivery.">
+<meta property="og:image" content="https://picsum.photos/seed/mummyakashop-og/1200/630">
+<meta property="og:url" content="https://www.mummyakashop.com/">
+<meta name="twitter:card" content="summary_large_image">
+
+<!-- Theme color for mobile browser chrome -->
+<meta name="theme-color" content="#1B2A4A">
+
+<!-- PWA-ready: manifest + icons wired up now so this can become an
+     installable app later with zero markup changes. -->
+<link rel="manifest" href="assets/manifest.webmanifest">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+
+<!-- Structured data for the store, helps search engines understand the business -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "GroceryStore",
+  "name": "Mummy Aka Shop",
+  "image": "https://picsum.photos/seed/mummyakashop-og/1200/630",
+  "address": { "@type": "PostalAddress", "addressLocality": "Abuja", "addressCountry": "NG" },
+  "priceRange": "₦₦"
+}
+</script>
+
+<!-- Fonts: Fraunces (display), Manrope (body/UI), JetBrains Mono (data/ledger) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<!-- ============================= PAGE LOADER ============================= -->
+<div class="page-loader" id="page-loader" aria-hidden="true">
+  <div class="loader-mark"></div>
+  <span class="mono" style="font-size:12px;letter-spacing:.1em;color:var(--charcoal-60)">MUMMY AKA SHOP</span>
+</div>
+
+<!-- ============================= HEADER ============================= -->
+<header class="site-header">
+  <div class="announce-bar" id="announce-bar">Free delivery in Abuja on orders over ₦30,000 · Live inventory synced with StockySaver</div>
+  <nav class="navbar" aria-label="Main navigation">
+    <button class="icon-btn nav-toggle" id="nav-toggle-btn" aria-label="Open menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+
+    <a href="#/" class="brand">
+      <span class="brand-mark">M</span>
+      <span class="brand-name">Mummy Aka Shop<br><small>Michael Web™ Commerce</small></span>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="#/">Home</a></li>
+      <li><a href="#/shop">Shop</a></li>
+      <li><a href="#/orders">Orders</a></li>
+      <li><a href="#/admin">Admin</a></li>
+    </ul>
+
+    <form class="nav-search" data-role="search-form" role="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="search" name="q" id="global-search" placeholder="Search products, e.g. milk, rice…" aria-label="Search products">
+    </form>
+
+    <div class="nav-actions">
+      <button class="theme-toggle" data-action="toggle-theme" aria-pressed="false" aria-label="Toggle dark mode">
+        <span class="knob">☀️</span>
+      </button>
+      <a class="icon-btn" href="#/wishlist" aria-label="Wishlist">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7.5-4.6-10-9.3C.5 8.2 2.4 5 5.9 5c2 0 3.4 1 6.1 3.6C14.7 6 16.1 5 18.1 5c3.5 0 5.4 3.2 3.9 6.7C19.5 16.4 12 21 12 21z"/></svg>
+        <span class="badge-count" data-badge="wishlist" style="display:none">0</span>
+      </a>
+      <a class="icon-btn" href="#/cart" aria-label="Shopping cart">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>
+        <span class="badge-count" data-badge="cart" style="display:none">0</span>
+      </a>
+      <a class="icon-btn" href="#/profile" aria-label="My account" title="My account">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </a>
+    </div>
+  </nav>
+</header>
+
+<!-- ============================= MOBILE DRAWER ============================= -->
+<div class="mobile-drawer" id="mobile-drawer">
+  <div class="scrim"></div>
+  <div class="panel" role="dialog" aria-label="Mobile navigation">
+    <form data-role="search-form" role="search" style="margin-bottom:1rem;position:relative;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:.9em;top:50%;transform:translateY(-50%);width:17px;opacity:.5" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="search" name="q" placeholder="Search products…" aria-label="Search products" style="width:100%;padding:.65em 1em .65em 2.6em;border-radius:999px;border:1px solid rgba(27,42,74,0.15);">
+    </form>
+    <a href="#/">🏠 Home</a>
+    <a href="#/shop">🛍️ Shop</a>
+    <a href="#/wishlist">🤍 Wishlist</a>
+    <a href="#/cart">🧺 Cart</a>
+    <a href="#/orders">🧾 Orders</a>
+    <a href="#/profile">👤 Profile</a>
+    <a href="#/admin">🔐 Admin</a>
+  </div>
+</div>
+
+<!-- ============================= MAIN CONTENT ============================= -->
+<main id="main-content">
+  <div class="wrap crumbs" id="crumbs" style="display:none;padding-top:1rem;"></div>
+  <div id="view-root"><!-- Router injects the active view here --></div>
+</main>
+
+<!-- ============================= FOOTER ============================= -->
+<footer class="site-footer">
+  <div class="wrap footer-grid">
+    <div>
+      <a href="#/" class="brand" style="color:var(--gold);margin-bottom:.6rem;">
+        <span class="brand-mark" style="background:var(--gold);color:var(--ink);">M</span>
+        <span>Mummy Aka Shop</span>
+      </a>
+      <p style="color:#EFE6D2AA;max-width:34ch;font-size:13px;">Your trusted neighbourhood shop in Abuja — provisions, beverages, home goods and more, stocked honestly and delivered fast.</p>
+    </div>
+    <div>
+      <h4>Shop</h4>
+      <a href="#/shop">All products</a>
+      <a href="#/shop?category=provisions">Provisions</a>
+      <a href="#/shop?category=beverages">Beverages</a>
+      <a href="#/wishlist">Wishlist</a>
+    </div>
+    <div>
+      <h4>Account</h4>
+      <a href="#/login">Sign in</a>
+      <a href="#/register">Create account</a>
+      <a href="#/orders">Order history</a>
+      <a href="#/profile">My profile</a>
+    </div>
+    <div>
+      <h4>Store info</h4>
+      <span id="footer-address" style="display:block;color:#EFE6D2CC;font-size:13px;padding:.3em 0;"></span>
+      <a href="tel:+2348000000000" id="footer-phone">Call: 0800 000 0000</a>
+      <a href="mailto:hello@mummyakashop.com" id="footer-email">hello@mummyakashop.com</a>
+      <a href="#/admin">Store admin</a>
+    </div>
+  </div>
+  <div class="wrap footer-bottom">
+    <span>© 2026 Mummy Aka Shop · Built by Michael Web™</span>
+    <span>Inventory synced live with StockySaver</span>
+  </div>
+</footer>
+
+<!-- ============================= TOASTS ============================= -->
+<div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
