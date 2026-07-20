@@ -1,0 +1,1 @@
+it only pulled one product from firebase. and the sales history is not detailed

@@ -1,0 +1,75 @@
+/* ==========================================================================
+   MUMMY AKA SHOP — RESPONSIVE RULES
+   Mobile-first overrides layered on top of style.css. Breakpoints:
+   480 (large phone) / 768 (tablet) / 1024 (small desktop) / 1280 (desktop)
+   ========================================================================== */
+
+/* ---------- Base (mobile, < 768px) already assumed by style.css defaults
+   where sensible; the rules below tighten things further for very small
+   screens, then progressively unlock desktop layouts. ---------- */
+
+@media (max-width: 767.98px) {
+  :root { --nav-h: 64px; }
+
+  .announce-bar { font-size: 11px; }
+  .nav-links, .nav-search { display: none; }
+  .nav-toggle { display: inline-flex; }
+  .brand span.brand-name { font-size: 1.05rem; }
+
+  .hero-grid { grid-template-columns: 1fr; text-align: left; }
+  .hero .ticket { margin-top: 2rem; transform: rotate(-1.5deg); max-width: 320px; }
+  .hero-stats { gap: 1.1rem; }
+
+  .pdp { grid-template-columns: 1fr; }
+  .cart-layout { grid-template-columns: 1fr; }
+  .cart-line { grid-template-columns: 60px 1fr; grid-template-areas: "img name" "img actions"; }
+  .cart-line img { grid-area: img; }
+  .cart-line .name-block { grid-area: name; }
+  .cart-line .line-actions { grid-area: actions; justify-content: space-between; margin-top: 0.5rem; }
+
+  .field-row { grid-template-columns: 1fr; }
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+  .admin-shell { grid-template-columns: 1fr; }
+  .admin-side { display: none; }
+  .admin-side.open { display: block; position: fixed; inset: var(--nav-h) 0 0 0; z-index: 250; overflow-y: auto; }
+
+  .grid-products { grid-template-columns: repeat(2, 1fr); gap: 0.8rem; }
+  .cat-card { width: 128px; padding: 0.8rem; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .section { padding-block: 2.2rem; }
+  .toolbar { overflow-x: auto; flex-wrap: nowrap; }
+  .select-sort { margin-left: 0; }
+}
+
+@media (max-width: 420px) {
+  .grid-products { grid-template-columns: 1fr 1fr; }
+  .hero h1 { font-size: var(--step-4); }
+}
+
+/* ---------- Tablet (768–1023px) ---------- */
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .nav-links { gap: 0; }
+  .nav-links a { padding: 0.55em 0.6em; font-size: 0.85rem; }
+  .grid-products { grid-template-columns: repeat(3, 1fr); }
+  .pdp { grid-template-columns: 1fr; }
+  .cart-layout { grid-template-columns: 1fr; }
+  .admin-shell { grid-template-columns: 190px 1fr; }
+  .footer-grid { grid-template-columns: 1.2fr 1fr 1fr; }
+  .footer-grid > :last-child { grid-column: span 3; }
+}
+
+/* ---------- Desktop small (1024–1279px) ---------- */
+@media (min-width: 1024px) and (max-width: 1279.98px) {
+  .grid-products { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ---------- Large desktop (>= 1280px) ---------- */
+@media (min-width: 1280px) {
+  .grid-products { grid-template-columns: repeat(5, 1fr); }
+}
+
+/* ---------- Print styles (receipts / order confirmations) ---------- */
+@media print {
+  .site-header, .site-footer, .toast-stack, .nav-actions, .admin-side, .btn { display: none !important; }
+  body { background: #fff; color: #000; }
+}
