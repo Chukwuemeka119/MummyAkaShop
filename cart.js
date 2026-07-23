@@ -95,12 +95,18 @@ export const Cart = {
   },
 };
 
-export function getCartSummary() {
+/**
+ * @param {"delivery"|"pickup"} fulfilmentMethod - pickup always waives the
+ * delivery fee outright, regardless of subtotal; delivery still gets free
+ * shipping once the subtotal clears FREE_DELIVERY_THRESHOLD.
+ */
+export function getCartSummary(fulfilmentMethod = "delivery") {
   const lines = Cart.getLines();
   const subtotal = lines.reduce((sum, l) => sum + l.lineTotal, 0);
-  const delivery = subtotal === 0 || subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
+  const isPickup = fulfilmentMethod === "pickup";
+  const delivery = isPickup || subtotal === 0 || subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
   const total = subtotal + delivery;
-  return { lines, subtotal, delivery, total, count: Cart.count(), freeDeliveryThreshold: FREE_DELIVERY_THRESHOLD };
+  return { lines, subtotal, delivery, total, count: Cart.count(), freeDeliveryThreshold: FREE_DELIVERY_THRESHOLD, isPickup };
 }
 
 export const Wishlist = {
@@ -145,7 +151,7 @@ export function cartViewHTML() {
         <h1 class="mt-0">Your basket <span class="muted mono">(${lines.length} item${lines.length > 1 ? "s" : ""})</span></h1>
         <button class="btn btn-ghost btn-sm" data-action="clear-cart">Clear basket</button>
       </div>
-      ${remainingForFree > 0 ? `<div class="panel" style="padding:.8rem 1rem;margin-bottom:1rem;"><span class="mono">Add ${formatNaira(remainingForFree)} more for free delivery 🚚</span></div>` : `<div class="panel" style="padding:.8rem 1rem;margin-bottom:1rem;background:var(--sage-100);border-color:transparent;"><span class="mono" style="color:var(--sage)">✓ You qualify for free delivery</span></div>`}
+      ${remainingForFree > 0 ? `<div class="panel" style="padding:.8rem 1rem;margin-bottom:1rem;"><span class="mono">Add ${formatNaira(remainingForFree)} more for free delivery 🚚</span> <span class="muted" style="font-size:12px">(choosing store pickup at checkout waives this too)</span></div>` : `<div class="panel" style="padding:.8rem 1rem;margin-bottom:1rem;background:var(--sage-100);border-color:transparent;"><span class="mono" style="color:var(--sage)">✓ You qualify for free delivery</span></div>`}
       <div class="panel">
         ${lines
           .map(

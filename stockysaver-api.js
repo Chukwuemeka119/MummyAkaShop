@@ -258,14 +258,22 @@ export const StockySaverAPI = {
       const orderNumber = generateOrderNumber();
 
       // Log into StockySaver's own sales list, in the same shape its POS
-      // checkout writes, so it shows up in Sales History / Reports there too.
+      // checkout writes (so it still shows up in Sales History / Reports
+      // there), PLUS the extra contact/fulfilment detail a website order
+      // needs that a till sale never captures — phone, email, delivery
+      // address, and order notes — so staff can actually act on it later.
       await pushSale({
         cashier: "Mummy Aka Shop — Online",
         customer: order.customer?.name || "Website customer",
+        customerPhone: order.customer?.phone || null,
+        customerEmail: order.customer?.email || null,
+        deliveryAddress: order.fulfillment?.address || null,
+        orderNotes: order.fulfillment?.notes || null,
         timestamp: new Date().toISOString(),
         total: order.totals.total,
         orderNumber,
         fulfilment: order.fulfillment?.method || null,
+        status: "pending", // staff update this as they attend to the order
         items: order.lines.map((l) => ({
           name: l.name,
           qty: l.quantity,
@@ -274,7 +282,7 @@ export const StockySaverAPI = {
         })),
       });
 
-      return { orderNumber, status: "confirmed", createdAt: new Date().toISOString(), ...order };
+      return { orderNumber, status: "pending", createdAt: new Date().toISOString(), ...order };
     }
     if (USE_MOCK) {
       await delay(500);

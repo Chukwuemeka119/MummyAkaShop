@@ -15,7 +15,7 @@ import { Cart, Wishlist, getCartSummary, cartViewHTML } from "./cart.js";
 import { AuthAPI, AdminAuth, OrdersStore, authViewHTML, profileViewHTML } from "./auth.js";
 import { StockySaverAPI, withGracefulSync } from "./stockysaver-api.js";
 import { STORE_INFO } from "./store-config.js";
-import { isConfigured as firebaseConfigured, fetchSalesList } from "./firebase.js";
+import { isConfigured as firebaseConfigured, fetchSalesList, updateSaleStatus } from "./firebase.js";
 
 const root = document.getElementById("view-root");
 const crumbsEl = document.getElementById("crumbs");
@@ -568,13 +568,19 @@ function renderCheckout() {
   document.title = "Checkout — Mummy Aka Shop";
   setCrumbs([{ label: "Home", href: "#/" }, { label: "Basket", href: "#/cart" }, { label: "Checkout", href: "#/checkout" }]);
 
-  const { lines, subtotal, delivery, total } = getCartSummary();
+  const { lines } = getCartSummary();
   if (lines.length === 0) {
     root.innerHTML = `<section class="section wrap"><div class="empty-state panel"><div class="emoji">🧺</div><h2>Nothing to check out yet</h2><p class="muted">Add items to your basket first.</p><a class="btn btn-primary" href="#/shop">Go to shop</a></div></section>`;
     return;
   }
 
   const user = AuthAPI.fullProfile();
+  // Tracks the currently-selected fulfilment method and its live totals —
+  // recalculated (not just re-styled) every time the customer switches
+  // between delivery and pickup, and read fresh at submit time so pickup
+  // orders are never charged a delivery fee.
+  let currentFulfilment = "delivery";
+  let currentSummary = getCartSummary(currentFulfilment);
 
   root.innerHTML = `
   <section class="section wrap">
@@ -599,11 +605,11 @@ function renderCheckout() {
             <div class="field">
               <label>Fulfilment method</label>
               <div class="flex gap-1" style="flex-wrap:wrap">
-                <label class="radio-card" style="flex:1;min-width:200px" data-fulfil="delivery">
-                  <input type="radio" name="fulfilment" value="delivery" checked> <span><strong>Home delivery</strong><br><span class="muted" style="font-size:12.5px">Same-day within Abuja</span></span>
+                <label class="radio-card active" style="flex:1;min-width:200px" data-fulfil="delivery">
+                  <input type="radio" name="fulfilment" value="delivery" checked> <span><strong>Home delivery</strong><br><span class="muted" style="font-size:12.5px">Same-day within Abuja · delivery fee applies</span></span>
                 </label>
                 <label class="radio-card" style="flex:1;min-width:200px" data-fulfil="pickup">
-                  <input type="radio" name="fulfilment" value="pickup"> <span><strong>Store pickup</strong><br><span class="muted" style="font-size:12.5px">Ready within the hour</span></span>
+                  <input type="radio" name="fulfilment" value="pickup"> <span><strong>Store pickup</strong><br><span class="muted" style="font-size:12.5px">Ready within the hour · no delivery fee</span></span>
                 </label>
               </div>
             </div>
@@ -626,19 +632,29 @@ function renderCheckout() {
       <aside class="panel">
         <h2 class="mt-0">Order summary</h2>
         ${lines.map((l) => `<div class="summary-row"><span>${l.product.name} × ${l.qty}</span><span class="mono">${formatNaira(l.lineTotal)}</span></div>`).join("")}
-        <div class="summary-row"><span>Subtotal</span><span class="mono">${formatNaira(subtotal)}</span></div>
-        <div class="summary-row"><span>Delivery</span><span class="mono">${delivery === 0 ? "Free" : formatNaira(delivery)}</span></div>
-        <div class="summary-row total"><span>Total</span><span>${formatNaira(total)}</span></div>
+        <div class="summary-row"><span>Subtotal</span><span class="mono" id="summary-subtotal">${formatNaira(currentSummary.subtotal)}</span></div>
+        <div class="summary-row"><span id="delivery-label">Delivery</span><span class="mono" id="summary-delivery">${currentSummary.delivery === 0 ? "Free" : formatNaira(currentSummary.delivery)}</span></div>
+        <div class="summary-row total"><span>Total</span><span id="summary-total">${formatNaira(currentSummary.total)}</span></div>
       </aside>
     </div>
   </section>`;
+
+  function refreshSummaryUI() {
+    currentSummary = getCartSummary(currentFulfilment);
+    document.getElementById("summary-subtotal").textContent = formatNaira(currentSummary.subtotal);
+    document.getElementById("summary-delivery").textContent =
+      currentSummary.isPickup ? "Waived (pickup)" : currentSummary.delivery === 0 ? "Free" : formatNaira(currentSummary.delivery);
+    document.getElementById("summary-total").textContent = formatNaira(currentSummary.total);
+  }
 
   root.querySelectorAll("[data-fulfil]").forEach((label) => {
     label.addEventListener("click", () => {
       root.querySelectorAll("[data-fulfil]").forEach((l) => l.classList.remove("active"));
       label.classList.add("active");
-      document.getElementById("address-field").style.display = label.dataset.fulfil === "pickup" ? "none" : "block";
-      document.getElementById("co-address").required = label.dataset.fulfil !== "pickup";
+      currentFulfilment = label.dataset.fulfil;
+      document.getElementById("address-field").style.display = currentFulfilment === "pickup" ? "none" : "block";
+      document.getElementById("co-address").required = currentFulfilment !== "pickup";
+      refreshSummaryUI();
     });
   });
 
@@ -650,7 +666,9 @@ function renderCheckout() {
       return;
     }
     const data = Object.fromEntries(new FormData(form).entries());
-    await submitOrder(data, { lines, subtotal, delivery, total });
+    // Always read the live, just-recalculated summary — never a stale
+    // value captured before the customer picked pickup vs delivery.
+    await submitOrder(data, currentSummary);
   });
 }
 
@@ -964,11 +982,17 @@ async function getCombinedOrders() {
       orderNumber: sale.orderNumber || `TILL-${String(sale.id).slice(-6).toUpperCase()}`,
       createdAt: sale.timestamp || new Date().toISOString(),
       customerName: sale.customer || "Walk-in",
+      customerPhone: sale.customerPhone || null,
+      customerEmail: sale.customerEmail || null,
+      deliveryAddress: sale.deliveryAddress || null,
+      orderNotes: sale.orderNotes || null,
+      items: (sale.items || []).map((i) => ({ name: i.name, qty: Number(i.qty) || 0, price: Number(i.price) || 0, total: Number(i.total) || 0 })),
       itemCount: (sale.items || []).reduce((s, i) => s + (Number(i.qty) || 0), 0),
       total: Number(sale.total) || 0,
       fulfilment: sale.fulfilment || "in-store",
-      status: "confirmed",
+      status: sale.status || (sale.orderNumber ? "pending" : "confirmed"),
       source: sale.orderNumber ? "web" : "till",
+      cashier: sale.cashier || null,
     }));
   }
   return OrdersStore.all().map((o) => ({
@@ -976,11 +1000,17 @@ async function getCombinedOrders() {
     orderNumber: o.orderNumber,
     createdAt: o.createdAt,
     customerName: o.customer?.name || "Guest",
+    customerPhone: o.customer?.phone || null,
+    customerEmail: o.customer?.email || null,
+    deliveryAddress: o.fulfillment?.address || null,
+    orderNotes: o.fulfillment?.notes || null,
+    items: (o.lines || []).map((l) => ({ name: l.name, qty: l.quantity, price: l.unitPrice, total: l.unitPrice * l.quantity })),
     itemCount: (o.lines || []).reduce((s, l) => s + (l.quantity || 0), 0),
     total: o.totals?.total || 0,
     fulfilment: o.fulfillment?.method || "delivery",
     status: o.status || "confirmed",
     source: "web",
+    cashier: null,
   }));
 }
 
@@ -1069,7 +1099,7 @@ async function adminOrders(el) {
   <div class="flex-between mt-0"><h1 class="mt-0">Orders</h1>${firebaseConfigured() ? '<span class="admin-tag">Live — till + web, from StockySaver</span>' : '<span class="admin-tag" style="background:var(--ink-100);color:var(--charcoal-60)">This device only (demo)</span>'}</div>
   <div class="panel table-scroll">
     <table class="data-table">
-      <thead><tr><th>Order #</th><th>Date</th><th>Customer</th><th>Items</th><th>Total</th><th>Source</th><th>Status</th></tr></thead>
+      <thead><tr><th>Order #</th><th>Date</th><th>Customer</th><th>Items</th><th>Total</th><th>Source</th><th>Status</th><th></th></tr></thead>
       <tbody>
         ${orders.map((o) => `
         <tr>
@@ -1080,10 +1110,116 @@ async function adminOrders(el) {
           <td class="mono">${formatNaira(o.total)}</td>
           <td>${o.source === "web" ? "🌐 Web" : "🏪 Till"} <span class="muted" style="text-transform:capitalize">· ${o.fulfilment}</span></td>
           <td><span class="status-pill ${o.status}">${o.status}</span></td>
-        </tr>`).join("") || `<tr><td colspan="7" class="muted center">No orders yet</td></tr>`}
+          <td><button class="btn btn-sm btn-outline" data-view-order="${o.id}">View</button></td>
+        </tr>`).join("") || `<tr><td colspan="8" class="muted center">No orders yet</td></tr>`}
       </tbody>
     </table>
-  </div>`;
+  </div>
+  <div class="overlay" id="order-overlay"></div>
+  <div class="slide-panel" id="order-detail-panel"></div>`;
+
+  const overlay = document.getElementById("order-overlay");
+  const panel = document.getElementById("order-detail-panel");
+  function closePanel() {
+    overlay.classList.remove("open");
+    panel.classList.remove("open");
+  }
+  overlay.addEventListener("click", closePanel);
+
+  el.querySelectorAll("[data-view-order]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const order = orders.find((o) => o.id === btn.dataset.viewOrder);
+      if (!order) return;
+      renderOrderDetailPanel(order, panel, { onClose: closePanel, onStatusChanged: () => adminOrders(el) });
+      overlay.classList.add("open");
+      panel.classList.add("open");
+    });
+  });
+}
+
+/**
+ * Renders the full detail of one order/sale into the admin slide-over so
+ * staff can see everything needed to actually attend to it: contact info,
+ * delivery address, notes, itemized list, and status controls.
+ */
+function renderOrderDetailPanel(order, panel, { onClose, onStatusChanged }) {
+  const isWeb = order.source === "web";
+  const canUpdateStatus = firebaseConfigured() && isWeb;
+  const statusOptions = ["pending", "preparing", "delivered", "cancelled"];
+
+  panel.innerHTML = `
+    <div class="sp-head">
+      <div>
+        <div class="mono muted" style="font-size:11px">${isWeb ? "🌐 Web order" : "🏪 Till sale"}</div>
+        <h2 class="mt-0" style="font-size:var(--step-1)">${order.orderNumber}</h2>
+      </div>
+      <button class="icon-btn" id="close-order-panel" aria-label="Close">✕</button>
+    </div>
+    <div class="sp-body">
+      <div class="panel" style="margin-bottom:1rem;">
+        <div class="summary-row"><span class="muted">Placed</span><span>${new Date(order.createdAt).toLocaleString("en-NG")}</span></div>
+        <div class="summary-row"><span class="muted">Status</span><span class="status-pill ${order.status}">${order.status}</span></div>
+        <div class="summary-row"><span class="muted">Fulfilment</span><span style="text-transform:capitalize">${order.fulfilment}</span></div>
+        ${order.cashier ? `<div class="summary-row"><span class="muted">Cashier</span><span>${order.cashier}</span></div>` : ""}
+      </div>
+
+      <h3 class="mt-0" style="font-size:var(--step-0)">Customer</h3>
+      <ul class="meta-list mt-0" style="margin-bottom:1.2rem;">
+        <li><b>Name</b><span>${order.customerName}</span></li>
+        ${order.customerPhone ? `<li><b>Phone</b><span><a href="tel:${order.customerPhone.replace(/[^\d+]/g, "")}">${order.customerPhone}</a></span></li>` : ""}
+        ${order.customerEmail ? `<li><b>Email</b><span><a href="mailto:${order.customerEmail}">${order.customerEmail}</a></span></li>` : ""}
+        ${order.deliveryAddress ? `<li><b>Address</b><span>${order.deliveryAddress}</span></li>` : ""}
+      </ul>
+      ${order.orderNotes ? `<div class="panel" style="background:var(--gold-100);border-color:transparent;margin-bottom:1.2rem;"><b style="font-size:12.5px">Order notes:</b><p class="mt-0" style="font-size:13.5px">${order.orderNotes}</p></div>` : ""}
+
+      <h3 style="font-size:var(--step-0)">Items (${order.itemCount})</h3>
+      <div class="panel" style="padding:0.6rem 1rem;">
+        ${order.items.map((i) => `<div class="summary-row"><span>${i.name} × ${i.qty}</span><span class="mono">${formatNaira(i.total)}</span></div>`).join("") || `<p class="muted mt-0">No itemized detail available.</p>`}
+        <div class="summary-row total"><span>Total</span><span>${formatNaira(order.total)}</span></div>
+      </div>
+
+      ${
+        order.customerPhone
+          ? `<div class="flex gap-1 mt-1" style="flex-wrap:wrap">
+              <a class="btn btn-primary btn-sm" href="tel:${order.customerPhone.replace(/[^\d+]/g, "")}">📞 Call customer</a>
+              <a class="btn btn-gold btn-sm" href="https://wa.me/${order.customerPhone.replace(/[^\d]/g, "")}" target="_blank" rel="noopener">💬 WhatsApp</a>
+            </div>`
+          : ""
+      }
+    </div>
+    <div class="sp-foot">
+      ${
+        canUpdateStatus
+          ? `<label for="status-select" style="font-weight:700;font-size:var(--step--1);display:block;margin-bottom:.4em;">Update status</label>
+             <select id="status-select" class="select-sort" style="width:100%;margin-bottom:.6rem;">
+               ${statusOptions.map((s) => `<option value="${s}" ${s === order.status ? "selected" : ""}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`).join("")}
+             </select>
+             <button class="btn btn-primary btn-block" id="save-status-btn">Save status</button>`
+          : `<p class="muted center" style="font-size:12.5px">${isWeb ? "Connect StockySaver to update order status." : "Till sales don't track a status — this was recorded directly at checkout."}</p>`
+      }
+    </div>`;
+
+  document.getElementById("close-order-panel").addEventListener("click", onClose);
+
+  const saveBtn = document.getElementById("save-status-btn");
+  if (saveBtn) {
+    saveBtn.addEventListener("click", async () => {
+      const newStatus = document.getElementById("status-select").value;
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Saving…";
+      const ok = await withGracefulSync(() => updateSaleStatus(order.id, newStatus), {
+        onError: () => toast("Could not update status — check your connection.", "error"),
+      });
+      if (ok) {
+        toast(`Order ${order.orderNumber} marked as ${newStatus}.`, "success");
+        onClose();
+        onStatusChanged();
+      } else {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Save status";
+      }
+    });
+  }
 }
 
 function adminCustomers(el) {

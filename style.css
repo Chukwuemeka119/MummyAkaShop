@@ -420,6 +420,7 @@ p { margin: 0 0 1em; }
 .table-scroll { overflow-x: auto; }
 .status-pill { font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; }
 .status-pill.pending { background: var(--amber-100); color: var(--amber); }
+.status-pill.preparing { background: var(--gold-100); color: var(--gold-600); }
 .status-pill.confirmed, .status-pill.paid { background: var(--sage-100); color: var(--sage); }
 .status-pill.delivered { background: var(--ink-100); color: var(--ink); }
 .status-pill.cancelled { background: #FBE1DC; color: var(--coral); }
@@ -434,7 +435,7 @@ p { margin: 0 0 1em; }
 .admin-tag { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; background: var(--gold-100); color: var(--gold-600); padding: 2px 8px; border-radius: 999px; font-weight: 800; margin-left: 0.5em; }
 
 /* ---------- Footer ---------------------------------------------------------------- */
-.site-footer { background: var(--ink); color: #EFE6D2; margin-top: 3rem; padding-block: 3rem 1.5rem; }
+.site-footer { background: var(--ink); color: black; margin-top: 3rem; padding-block: 3rem 1.5rem; }
 .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 2rem; }
 .footer-grid h4 { color: var(--gold); font-family: var(--font-body); font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.08em; }
 .footer-grid a { color: #EFE6D2CC; display: block; padding: 0.3em 0; font-size: var(--step--1); }

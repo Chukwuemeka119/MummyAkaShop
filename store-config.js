@@ -35,7 +35,7 @@ export const STORE_INFO = {
   // Socials — leave any value "" to hide that icon in the footer
   social: {
     instagram: "",
-    facebook: "",
+    facebook: "https://web.facebook.com/people/Nwanyi-Ovoko-2/61586354764834/",
     tiktok: "",
     x: "",
   },
@@ -47,7 +47,7 @@ export const STORE_INFO = {
 
   // Optional photo of the storefront/owner for the About section.
   // Leave "" to fall back to a placeholder image.
-  aboutImage: "",
+  aboutImage: "https://scontent.fiba2-2.fna.fbcdn.net/v/t39.30808-6/624681348_122109473103211825_1059353456837663580_n.jpg?stp=dst-jpg_tt6&cstp=mx720x722&ctp=s720x722&_nc_cat=101&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=tYg53axba-kQ7kNvwHm1w6Y&_nc_oc=AdokPOV7qrUnKDBzEqI0oAST0XWzCFFnwFSTgE03MpN4Mu0UY597SpMwAbeKXMxUQ6Y&_nc_zt=23&_nc_ht=scontent.fiba2-2.fna&_nc_gid=D9oZzt1s2hvoR5JnZLulIA&_nc_ss=7b289&oh=00_AQC_WQ8zJ5WAGK_AfsTNdjN4FbaRbDBq8In6TSgCXwXksg&oe=6A67B573",
 
   // Free delivery threshold shown in the top announcement bar — keep this
   // in sync with FREE_DELIVERY_THRESHOLD in js/cart.js if you change it there.

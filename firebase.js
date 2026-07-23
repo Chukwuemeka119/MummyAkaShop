@@ -56,10 +56,18 @@ export function bizRef(path) {
 
 /** Reads businesses/{bizId}/inventory as a flat array of { id, name, price, qty }. */
 export async function fetchInventoryList() {
-  if (!isConfigured()) return [];
+  if (!isConfigured()) {
+    console.warn("[Firebase] fetchInventoryList skipped — not configured (check FIREBASE_ENABLED / STORE_BIZ_ID).");
+    return [];
+  }
   const snap = await dbFns.get(bizRef("inventory"));
   const list = [];
-  if (snap.exists()) snap.forEach((child) => list.push({ id: child.key, ...child.val() }));
+  // NOTE: RTDB's snapshot.forEach() treats a truthy callback return as
+  // "stop iterating" (like Array.some) — Array.push() returns the new
+  // length, which is truthy from the very first item, so the callback
+  // body must NOT be an implicit-return arrow. Braces + no return fixes it.
+  if (snap.exists()) snap.forEach((child) => { list.push({ id: child.key, ...child.val() }); });
+  console.info(`[Firebase] fetchInventoryList: ${list.length} row(s) from businesses/${STORE_BIZ_ID}/inventory`);
   return list;
 }
 
@@ -89,7 +97,7 @@ export function subscribeInventory(callback) {
   if (!isConfigured()) return () => {};
   return dbFns.onValue(bizRef("inventory"), (snap) => {
     const list = [];
-    if (snap.exists()) snap.forEach((child) => list.push({ id: child.key, ...child.val() }));
+    if (snap.exists()) snap.forEach((child) => { list.push({ id: child.key, ...child.val() }); });
     callback(list);
   });
 }
@@ -138,7 +146,7 @@ export async function fetchSalesList() {
   if (!isConfigured()) return [];
   const snap = await dbFns.get(bizRef("sales"));
   const list = [];
-  if (snap.exists()) snap.forEach((child) => list.push({ id: child.key, ...child.val() }));
+  if (snap.exists()) snap.forEach((child) => { list.push({ id: child.key, ...child.val() }); });
   list.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
   return list;
 }
@@ -152,7 +160,7 @@ export function subscribeSales(callback) {
   if (!isConfigured()) return () => {};
   return dbFns.onValue(bizRef("sales"), (snap) => {
     const list = [];
-    if (snap.exists()) snap.forEach((child) => list.push({ id: child.key, ...child.val() }));
+    if (snap.exists()) snap.forEach((child) => { list.push({ id: child.key, ...child.val() }); });
     list.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
     callback(list);
   });
@@ -173,6 +181,18 @@ export async function fetchAdminPassword() {
   } catch {
     return "admin123";
   }
+}
+
+/**
+ * Updates one sale's status in place (e.g. "pending" → "preparing" →
+ * "delivered"/"cancelled") so staff can track which web orders have been
+ * attended to. Safe no-op on till sales too, if you ever want to annotate
+ * those the same way.
+ */
+export async function updateSaleStatus(saleId, status) {
+  if (!isConfigured() || !saleId) return false;
+  await dbFns.update(dbFns.ref(db, bizPath(`sales/${saleId}`)), { status });
+  return true;
 }
 
 /** Lightweight connectivity check — confirms the business node is reachable. */
